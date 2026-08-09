@@ -1,0 +1,38 @@
+[
+  {
+    "file": "line1.wav",
+    "start": 0.5,
+    "dur": 3.898,
+    "text": "Alright \u2014 new test case. I'll call this one: fill out form."
+  },
+  {
+    "file": "line2.wav",
+    "start": 7.0,
+    "dur": 4.084,
+    "text": "Now the specification. Plain English: what the user should be able to do."
+  },
+  {
+    "file": "line3.wav",
+    "start": 13.5,
+    "dur": 4.142,
+    "text": "I hand that to the agent. Go to the demo page, and fill out the contact form."
+  },
+  {
+    "file": "line4.wav",
+    "start": 21.0,
+    "dur": 3.922,
+    "text": "And there are my steps. Readable by me, executable by the machine."
+  },
+  {
+    "file": "line5.wav",
+    "start": 28.0,
+    "dur": 3.364,
+    "text": "Now watch it drive the real browser. Every step, verified."
+  },
+  {
+    "file": "line6.wav",
+    "start": 36.5,
+    "dur": 3.907,
+    "text": "Five of five passed. Don't chat with your code. Specify it."
+  }
+]

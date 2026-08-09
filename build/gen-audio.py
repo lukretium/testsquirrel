@@ -216,9 +216,54 @@ def riser(dur):
     return (sweep * 0.5 + noise) * (t / dur) ** 2.2
 
 
+# ---------------------------------------------------------------- voice-over
+VOICE_DIR = os.path.join(ROOT, 'build', 'voice')
+
+
+def load_voice():
+    """Load the rendered voice lines (see gen-voice.py), resampled to SR."""
+    manifest = os.path.join(VOICE_DIR, 'lines.json')
+    if not os.path.exists(manifest):
+        print('no voice lines found — building an instrumental track')
+        return []
+    import json
+    out = []
+    for item in json.load(open(manifest)):
+        src = os.path.join(VOICE_DIR, item['file'])
+        # ffmpeg does the rate conversion properly; np.interp would alias
+        raw = subprocess.run(
+            ['ffmpeg', '-v', 'error', '-i', src, '-ac', '1', '-ar', str(SR),
+             '-f', 'f32le', '-'],
+            check=True, stdout=subprocess.PIPE).stdout
+        mono = np.frombuffer(raw, dtype='<f4').astype(float)
+        out.append((item['start'], mono))
+    return out
+
+
+def duck_envelope(voice, depth_db=-11.0, ramp=0.28):
+    """Gain curve that pulls the music down while the squirrel is talking."""
+    env = np.ones(N)
+    depth = 10 ** (depth_db / 20)
+    r = int(ramp * SR)
+    for start, mono in voice:
+        a = max(0, idx(start) - r)
+        b = min(N, idx(start) + len(mono) + r)
+        seg = np.full(b - a, depth)
+        k = min(r, len(seg) // 2)
+        if k > 0:
+            seg[:k] = np.linspace(1.0, depth, k)
+            seg[-k:] = np.linspace(depth, 1.0, k)
+        env[a:b] = np.minimum(env[a:b], seg)
+    return env
+
+
 # ------------------------------------------------------------------- build
 def build():
-    buf = make_pad() + make_arp() + make_pulse()
+    voice = load_voice()
+
+    music = make_pad() + make_arp() + make_pulse()
+    music *= duck_envelope(voice)[:, None]
+    buf = music
 
     # typing — irregular spacing so it sounds human, with pauses between words
     for t0, t1 in TYPING:
@@ -256,6 +301,10 @@ def build():
     add(buf, END_CARD - 1.1, riser(1.1), gain=0.16)
     for i, f in enumerate((261.63, 329.63, 392.00, 523.25)):
         add(buf, END_CARD, bell(f, 3.2, amp=0.20), pan=-0.3 + 0.2 * i, gain=0.9)
+
+    # the squirrel, centred and sitting on top of the ducked bed
+    for start, mono in voice:
+        add(buf, start, mono, gain=0.85)
 
     # fade in/out at the edges
     fi, fo = int(1.2 * SR), int(2.6 * SR)

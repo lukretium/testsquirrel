@@ -16,6 +16,8 @@ build/
   gen-hero.js                       regenerates the hero portrait SVG
   render-demo.js                    renders + encodes the demo video
   gen-audio.py                      synthesises the soundtrack and muxes it in
+  gen-voice.py                      renders the mascot's voice-over lines (needs piper)
+  voice/                            the rendered voice clips, committed
   demo/app.html                     fake TestSquirrel desktop app, seekable animation
   demo/pip.html                     mascot "webcam" overlay, seekable animation
   demo/stage.html                   composites app + webcam into one 1920x1080 frame
@@ -83,3 +85,24 @@ the sounds will drift out of sync** — they are duplicated, not derived.
 
 Final loudness is set by `loudnorm=I=-18` at mux time; the Python side deliberately leaves
 6 dB of headroom.
+
+### Voice-over
+
+The mascot narrates six lines. The rendered clips live in `build/voice/` and are committed, so
+`gen-audio.py` works without any TTS installed — the music bed ducks about 11 dB underneath them.
+
+Only if you want to change the script text or the voice:
+
+```sh
+python3 -m venv piperenv && ./piperenv/bin/pip install piper-tts
+mkdir voices && cd voices && ../piperenv/bin/python -m piper.download_voices en_US-ryan-high && cd ..
+python3 build/gen-voice.py --piper ./piperenv/bin/python --model voices/en_US-ryan-high.onnx --write-talk
+```
+
+[piper](https://github.com/OHF-Voice/piper1-gpl) is a neural TTS that runs offline; the voice is
+`en_US-ryan-high`. The lines and their timing anchors are the `LINES` table at the top of
+`gen-voice.py`; each line is auto-fitted into its window by adjusting piper's `--length-scale`.
+
+`--write-talk` rewrites the `TALK` array in `demo/pip.html` to the durations actually rendered,
+which is what keeps the mouth animation in sync. **After changing the voice you must re-render
+the video** (`node build/render-demo.js`) — the mouth moves on those windows.
