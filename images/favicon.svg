@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="TestSquirrel">
+  <defs>
+    <linearGradient id="f" x1=".15" y1="0" x2=".9" y2="1">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="50%" stop-color="#ecc890"/>
+      <stop offset="100%" stop-color="#b8792c"/>
+    </linearGradient>
+  </defs>
+  <!-- Head-only mark: chunkier shapes and no code bars, so it survives 16px. -->
+  <g fill="#15201c" stroke="#15201c" stroke-width="5" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M27 21c-4-9-5-14-3-17 2-4 5-2 7 2 2 5 5 10 7 13z"/>
+    <path d="M28 18c11 0 20 7 20 17 0 4-2 8-5 11 5 2 8 3 9 5 1 2-1 4-5 4-5 1-11 0-16-2-3 1-6 2-9 2-11 0-18-8-18-19S17 18 28 18z"/>
+  </g>
+  <g>
+    <path d="M27 21c-4-9-5-14-3-17 2-4 5-2 7 2 2 5 5 10 7 13z" fill="#a3671f"/>
+    <path d="M28 18c11 0 20 7 20 17 0 4-2 8-5 11 5 2 8 3 9 5 1 2-1 4-5 4-5 1-11 0-16-2-3 1-6 2-9 2-11 0-18-8-18-19S17 18 28 18z" fill="url(#f)"/>
+  </g>
+  <circle cx="32" cy="34" r="5" fill="#15201c"/>
+  <circle cx="33.6" cy="32.2" r="1.7" fill="#fff"/>
+  <circle cx="49" cy="41" r="2.6" fill="#15201c"/>
+  <!-- teal code line, the brand cue -->
+  <rect x="12" y="55" width="26" height="5" rx="2.5" fill="#0e9e86"/>
+  <rect x="42" y="55" width="12" height="5" rx="2.5" fill="#1d2b26"/>
+</svg>

@@ -1,0 +1,325 @@
+<!doctype html>
+<!--
+  Picture-in-picture "webcam" overlay for the TestSquirrel demo screencast.
+  Renders at exactly 640x360. Deterministic: window.seek(t) sets all motion.
+  Composited over app.html frames by build/render-demo.js.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;width:640px;height:360px;overflow:hidden;background:#000}
+  #stage{position:relative;width:640px;height:360px}
+  svg{position:absolute;inset:0;display:block}
+</style>
+</head>
+<body>
+<div id="stage">
+<svg id="cam" viewBox="0 0 640 360" width="640" height="360" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- room -->
+    <radialGradient id="roomGlow" cx="50%" cy="42%" r="72%">
+      <stop offset="0%" stop-color="#3a2c66"/><stop offset="55%" stop-color="#1d1836"/><stop offset="100%" stop-color="#0a0913"/>
+    </radialGradient>
+    <linearGradient id="wallShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#000" stop-opacity=".45"/><stop offset="45%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#000" stop-opacity=".6"/>
+    </linearGradient>
+    <!-- chair -->
+    <linearGradient id="chairFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#15151d"/><stop offset="50%" stop-color="#22222e"/><stop offset="100%" stop-color="#101017"/>
+    </linearGradient>
+    <!-- fur -->
+    <linearGradient id="furMain" x1=".15" y1="0" x2=".9" y2="1">
+      <stop offset="0%" stop-color="#e08a3a"/><stop offset="45%" stop-color="#c26a24"/><stop offset="100%" stop-color="#8f4715"/>
+    </linearGradient>
+    <linearGradient id="furHead" x1=".1" y1="0" x2=".95" y2="1">
+      <stop offset="0%" stop-color="#eb9b4a"/><stop offset="52%" stop-color="#cd7527"/><stop offset="100%" stop-color="#9a4d17"/>
+    </linearGradient>
+    <linearGradient id="furBib" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fdf4e4"/><stop offset="100%" stop-color="#e6d3ba"/>
+    </linearGradient>
+    <linearGradient id="tailFur" x1="0" y1="1" x2=".6" y2="0">
+      <stop offset="0%" stop-color="#a4571b"/><stop offset="55%" stop-color="#d68436"/><stop offset="100%" stop-color="#f3bd7c"/>
+    </linearGradient>
+    <radialGradient id="eyeBall" cx="38%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#4a3524"/><stop offset="45%" stop-color="#1a1109"/><stop offset="100%" stop-color="#070402"/>
+    </radialGradient>
+    <linearGradient id="hoodie" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#232935"/><stop offset="100%" stop-color="#12161d"/>
+    </linearGradient>
+    <linearGradient id="canFill" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a1a20"/><stop offset="45%" stop-color="#33333f"/><stop offset="100%" stop-color="#141419"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="softer" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="tiny" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.2"/>
+    </filter>
+    <clipPath id="frameClip"><rect x="0" y="0" width="640" height="360" rx="0"/></clipPath>
+  </defs>
+
+  <g clip-path="url(#frameClip)">
+    <!-- ================= room ================= -->
+    <rect width="640" height="360" fill="url(#roomGlow)"/>
+
+    <!-- RGB LED strips on the back wall -->
+    <g id="ledStrips">
+      <rect id="led1" x="18" y="26" width="150" height="7" rx="3.5" fill="#8b5cf6" filter="url(#soft)" opacity=".95"/>
+      <rect id="led2" x="470" y="52" width="152" height="7" rx="3.5" fill="#22d3ee" filter="url(#soft)" opacity=".95"/>
+      <rect id="led3" x="30" y="300" width="120" height="6" rx="3" fill="#ec4899" filter="url(#soft)" opacity=".8"/>
+      <rect id="led4" x="500" y="286" width="126" height="6" rx="3" fill="#0e9e86" filter="url(#soft)" opacity=".85"/>
+    </g>
+
+    <!-- soft key light from the monitor (front-left) -->
+    <ellipse id="keyLight" cx="180" cy="210" rx="210" ry="150" fill="#5eead4" opacity=".10" filter="url(#softer)"/>
+    <ellipse id="rimLight" cx="520" cy="150" rx="150" ry="140" fill="#a855f7" opacity=".16" filter="url(#softer)"/>
+
+    <!-- shelf silhouette + a plant, back wall -->
+    <g opacity=".55">
+      <rect x="452" y="120" width="176" height="6" rx="2" fill="#0d0c17"/>
+      <path d="M486 120c-6-16 2-30 10-36-2 12 2 20 8 26 3-10 10-16 18-18-6 8-8 18-6 28z" fill="#123a2f"/>
+      <rect x="530" y="96" width="13" height="24" rx="2" fill="#0e0d18"/>
+      <rect x="546" y="100" width="11" height="20" rx="2" fill="#141322"/>
+      <rect x="560" y="94" width="14" height="26" rx="2" fill="#0e0d18"/>
+    </g>
+
+    <!-- ================= gaming chair ================= -->
+    <g id="chair">
+      <!-- backrest -->
+      <path d="M148 360V196c0-60 44-104 104-104h88c60 0 104 44 104 104v164z" fill="url(#chairFill)"/>
+      <!-- RGB edge piping -->
+      <path id="chairPiping" d="M148 360V196c0-60 44-104 104-104h88c60 0 104 44 104 104v164"
+            fill="none" stroke="#22d3ee" stroke-width="5" opacity=".85" filter="url(#tiny)"/>
+      <!-- stitched panels -->
+      <path d="M196 360V206c0-38 26-66 62-66h72c36 0 62 28 62 66v154z" fill="#191922"/>
+      <g stroke="#2c2c3a" stroke-width="2" fill="none">
+        <path d="M214 360V212"/><path d="M426 360V212"/>
+        <path d="M214 250h212"/><path d="M214 300h212"/>
+      </g>
+      <!-- wings -->
+      <path d="M148 232c-18 6-26 22-24 42 2 20 12 32 26 36z" fill="#20202c"/>
+      <path d="M492 232c18 6 26 22 24 42-2 20-12 32-26 36z" fill="#20202c"/>
+    </g>
+
+    <!-- ================= squirrel ================= -->
+    <g id="squirrel" transform="translate(320 205) scale(.9) translate(-320 -205)">
+      <!-- big bushy tail sweeping up behind the right shoulder -->
+      <g id="tail">
+        <!-- dark underlayer = thick outline -->
+        <path d="M470 372c62-20 100-74 100-146 0-70-40-124-92-142-20-7-34 16-16 28 40 26 62 62 62 110s-24 88-70 112z"
+              fill="#5a2f0d"/>
+        <!-- plume -->
+        <path d="M474 364c56-20 90-70 90-136 0-64-36-114-84-131-12-4-20 9-9 17 37 25 57 58 57 102s-22 84-64 110z"
+              fill="url(#tailFur)"/>
+        <!-- fur notches along the outer edge -->
+        <g fill="#f7d3a1" opacity=".6">
+          <path d="M552 128c14-12 18-32 12-50 16 14 20 40 8 56z"/>
+          <path d="M572 186c16-8 24-28 21-48 12 17 8 44-9 55z"/>
+          <path d="M570 250c15-4 27-22 28-42 8 19-1 45-19 52z"/>
+          <path d="M546 306c14 0 29-14 36-32 4 21-12 43-30 46z"/>
+          <path d="M504 350c13 4 30-6 41-22 0 21-19 39-38 37z"/>
+        </g>
+        <!-- inner highlight streak -->
+        <path d="M498 336c34-24 52-62 52-110 0-40-14-72-38-93 30 18 48 54 48 97 0 50-24 90-62 112z"
+              fill="#fde8c6" opacity=".35"/>
+      </g>
+
+      <!-- torso in a dark hoodie -->
+      <g id="torso">
+        <path d="M320 360c-96 0-146-38-158-92-4-18 6-34 24-40l52-18h164l52 18c18 6 28 22 24 40-12 54-62 92-158 92z"
+              fill="url(#hoodie)"/>
+        <!-- hoodie collar + zip -->
+        <path d="M262 216c14 30 34 46 58 46s44-16 58-46l-22-8c-10 18-22 27-36 27s-26-9-36-27z" fill="#0d1016"/>
+        <path d="M318 262v98" stroke="#2c3442" stroke-width="4"/>
+        <!-- teal chest logo blip -->
+        <circle cx="272" cy="308" r="11" fill="#0e9e86" opacity=".9"/>
+        <path d="M266 308l5 5 8-10" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- cream chest bib peeking out of the collar -->
+        <path d="M296 214c6 22 14 34 24 34s18-12 24-34z" fill="url(#furBib)"/>
+      </g>
+
+      <!-- head group: transformed by seek() -->
+      <!-- head: seek() writes a translate/rotate/translate about the pivot (320,150) -->
+      <g id="head">
+        <g>
+          <!-- ears + tufts (red-squirrel signature) -->
+          <g id="ears">
+            <path d="M254 96c-10-30-8-56 2-74 12 16 24 32 30 52z" fill="#8f4715"/>
+            <path d="M258 98c-8-26-7-48 1-63 10 14 20 28 25 45z" fill="url(#furHead)"/>
+            <path d="M262 46c-6-16-6-28-3-38 5 12 11 22 13 32z" fill="#a8590f"/>
+            <path d="M386 96c10-30 8-56-2-74-12 16-24 32-30 52z" fill="#8f4715"/>
+            <path d="M382 98c8-26 7-48-1-63-10 14-20 28-25 45z" fill="url(#furHead)"/>
+            <path d="M378 46c6-16 6-28 3-38-5 12-11 22-13 32z" fill="#a8590f"/>
+          </g>
+
+          <!-- skull -->
+          <path d="M320 214c-46 0-80-32-80-76 0-48 36-80 80-80s80 32 80 80c0 44-34 76-80 76z" fill="#8f4715"/>
+          <path d="M320 210c-43 0-75-30-75-72 0-45 34-76 75-76s75 31 75 76c0 42-32 72-75 72z" fill="url(#furHead)"/>
+          <!-- fur ruffles along the cheek line -->
+          <g fill="#e59647" opacity=".75">
+            <path d="M247 128l-11-7 12-2z"/><path d="M249 148l-12-4 11-5z"/><path d="M256 168l-13-1 11-7z"/>
+            <path d="M268 186l-13 3 9-10z"/><path d="M391 128l11-7-12-2z"/><path d="M389 148l12-4-11-5z"/>
+            <path d="M382 168l13-1-11-7z"/><path d="M370 186l13 3-9-10z"/>
+          </g>
+          <!-- brow / cheek cream patches -->
+          <ellipse cx="278" cy="106" rx="20" ry="12" fill="#fbe6c8" opacity=".55" transform="rotate(-16 278 106)"/>
+          <ellipse cx="362" cy="106" rx="20" ry="12" fill="#fbe6c8" opacity=".55" transform="rotate(16 362 106)"/>
+
+          <!-- eyes -->
+          <g id="eyes">
+            <ellipse cx="288" cy="136" rx="22" ry="23" fill="#2a1a0c"/>
+            <ellipse cx="288" cy="136" rx="19" ry="20" fill="url(#eyeBall)"/>
+            <circle cx="281" cy="128" r="6.5" fill="#fff" opacity=".95"/>
+            <circle cx="295" cy="145" r="3" fill="#7dd3fc" opacity=".55"/>
+            <ellipse cx="352" cy="136" rx="22" ry="23" fill="#2a1a0c"/>
+            <ellipse cx="352" cy="136" rx="19" ry="20" fill="url(#eyeBall)"/>
+            <circle cx="345" cy="128" r="6.5" fill="#fff" opacity=".95"/>
+            <circle cx="359" cy="145" r="3" fill="#7dd3fc" opacity=".55"/>
+            <!-- lids, driven by seek() -->
+            <rect id="lidL" x="264" y="113" width="48" height="0" fill="#a8590f"/>
+            <rect id="lidR" x="328" y="113" width="48" height="0" fill="#a8590f"/>
+          </g>
+
+          <!-- muzzle -->
+          <path d="M320 156c26 0 42 14 42 30s-18 26-42 26-42-10-42-26 16-30 42-30z" fill="url(#furBib)"/>
+          <path d="M320 158c-9 0-16 5-16 11s7 10 16 10 16-4 16-10-7-11-16-11z" fill="#2b1a10"/>
+          <path d="M320 179v9" stroke="#2b1a10" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- mouth, driven by seek() -->
+          <path id="mouth" d="M304 190q16 12 32 0" stroke="#2b1a10" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+          <!-- chisel incisors -->
+          <g id="teeth">
+            <rect x="311" y="190" width="8" height="13" rx="2" fill="#fffdf6"/>
+            <rect x="321" y="190" width="8" height="13" rx="2" fill="#f4eee0"/>
+          </g>
+          <!-- whiskers -->
+          <g stroke="#f7e6cd" stroke-width="2" fill="none" opacity=".8" stroke-linecap="round">
+            <path d="M280 172q-34-8-52-20"/><path d="M280 180q-36 0-56 6"/><path d="M282 188q-32 8-48 20"/>
+            <path d="M360 172q34-8 52-20"/><path d="M360 180q36 0 56 6"/><path d="M358 188q32 8 48 20"/>
+          </g>
+
+          <!-- gaming headset -->
+          <g id="headset">
+            <path d="M232 140c0-58 40-100 88-100s88 42 88 100" fill="none" stroke="#15151c" stroke-width="15" stroke-linecap="round"/>
+            <path d="M236 132c2-52 40-90 84-90s82 38 84 90" fill="none" stroke="#2f3340" stroke-width="5" opacity=".9"/>
+            <!-- ear cups -->
+            <rect x="206" y="118" width="44" height="66" rx="18" fill="#15151c"/>
+            <rect x="212" y="126" width="32" height="50" rx="14" fill="url(#canFill)"/>
+            <circle id="cupGlowL" cx="228" cy="151" r="9" fill="#22d3ee" opacity=".9" filter="url(#tiny)"/>
+            <rect x="390" y="118" width="44" height="66" rx="18" fill="#15151c"/>
+            <rect x="396" y="126" width="32" height="50" rx="14" fill="url(#canFill)"/>
+            <circle id="cupGlowR" cx="412" cy="151" r="9" fill="#22d3ee" opacity=".9" filter="url(#tiny)"/>
+            <!-- boom mic -->
+            <path d="M250 176c-6 24 6 44 30 52" fill="none" stroke="#15151c" stroke-width="8" stroke-linecap="round"/>
+            <ellipse cx="288" cy="230" rx="13" ry="10" fill="#1c1c25" transform="rotate(18 288 230)"/>
+            <circle id="micLed" cx="299" cy="234" r="3.4" fill="#0e9e86"/>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <!-- laptop edge, bottom-right foreground -->
+    <g id="laptop">
+      <path d="M560 360l-36-58h116v58z" fill="#0c0c12"/>
+      <path d="M534 310h106v6H532z" fill="#2a2a36"/>
+      <rect x="546" y="318" width="88" height="34" rx="3" fill="#0e9e86" opacity=".18" filter="url(#soft)"/>
+    </g>
+
+    <!-- vignette + webcam grain feel -->
+    <rect width="640" height="360" fill="url(#wallShade)"/>
+    <rect id="camTint" width="640" height="360" fill="#7c3aed" opacity=".05"/>
+  </g>
+</svg>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const head = $('head'), lidL = $('lidL'), lidR = $('lidR'), mouth = $('mouth'), teeth = $('teeth');
+  const chairPiping = $('chairPiping'), micLed = $('micLed');
+  const cupL = $('cupGlowL'), cupR = $('cupGlowR');
+  const leds = [$('led1'), $('led2'), $('led3'), $('led4')];
+  const tail = $('tail'), torso = $('torso'), camTint = $('camTint');
+
+  const TAU = Math.PI * 2;
+  const hsl = (h, s, l) => `hsl(${((h % 360) + 360) % 360} ${s}% ${l}%)`;
+
+  // Segments where the mascot is "talking" (mouth animates). Everything else: idle.
+  const TALK = [[0.5, 5.0], [7.0, 12.0], [13.5, 19.0], [21.0, 26.0], [28.0, 33.0], [36.5, 41.0]];
+  const talking = t => TALK.some(([a, b]) => t >= a && t < b);
+
+  // Deterministic pseudo-blinks: eyes close briefly at fixed times.
+  const BLINKS = [1.9, 4.6, 7.8, 11.3, 14.9, 18.2, 22.6, 26.1, 30.4, 34.8, 38.9];
+  function blinkAmount(t) {
+    let a = 0;
+    for (const b of BLINKS) {
+      const d = Math.abs(t - b);
+      if (d < 0.11) a = Math.max(a, 1 - d / 0.11);
+    }
+    return a;
+  }
+
+  window.DURATION = 42;
+
+  window.seek = function seek(t) {
+    // --- head: gentle bob, sway and tilt (idle "alive" motion) ---
+    const bob = Math.sin(t * 1.35) * 3.2 + Math.sin(t * 0.53 + 1.1) * 1.8;
+    const sway = Math.sin(t * 0.62) * 5.5 + Math.sin(t * 0.27 + 0.4) * 3;
+    const tilt = Math.sin(t * 0.44 + 0.8) * 2.6;
+    const nod = talking(t) ? Math.sin(t * 5.1) * 1.6 : 0;
+    head.setAttribute('transform',
+      `translate(${320 + sway} ${150 + bob + nod}) rotate(${tilt}) translate(${-320} ${-150})`);
+
+    // --- torso: follows the head at a fraction, one frame "behind" ---
+    const tb = Math.sin((t - 0.12) * 1.35) * 1.4;
+    const ts = Math.sin((t - 0.12) * 0.62) * 2.2;
+    torso.setAttribute('transform', `translate(${ts} ${tb})`);
+
+    // --- tail: slow swish ---
+    const swish = Math.sin(t * 0.75 + 0.6) * 3.4;
+    tail.setAttribute('transform', `rotate(${swish} 452 340)`);
+
+    // --- eyes: blink by dropping a lid rect over the eyeball ---
+    const lid = blinkAmount(t) * 46;
+    lidL.setAttribute('height', lid.toFixed(2));
+    lidR.setAttribute('height', lid.toFixed(2));
+
+    // --- mouth: open/close while talking, small smile when idle ---
+    if (talking(t)) {
+      const open = (Math.sin(t * 9.2) * 0.5 + 0.5) * 0.75 + (Math.sin(t * 15.7) * 0.5 + 0.5) * 0.25;
+      const h = 3 + open * 13;
+      mouth.setAttribute('d', `M304 188q16 ${h * 1.7} 32 0`);
+      teeth.setAttribute('opacity', (0.35 + open * 0.65).toFixed(2));
+    } else {
+      mouth.setAttribute('d', 'M304 190q16 12 32 0');
+      teeth.setAttribute('opacity', '1');
+    }
+
+    // --- RGB lighting cycles ---
+    const h0 = t * 26;
+    leds.forEach((el, i) => {
+      el.setAttribute('fill', hsl(h0 + i * 78, 88, 62));
+      el.setAttribute('opacity', (0.7 + 0.25 * Math.sin(t * 1.6 + i)).toFixed(3));
+    });
+    const cupHue = h0 + 140;
+    chairPiping.setAttribute('stroke', hsl(h0 + 200, 85, 58));
+    cupL.setAttribute('fill', hsl(cupHue, 90, 62));
+    cupR.setAttribute('fill', hsl(cupHue, 90, 62));
+    cupL.setAttribute('opacity', (0.75 + 0.25 * Math.sin(t * 3.1)).toFixed(3));
+    cupR.setAttribute('opacity', (0.75 + 0.25 * Math.sin(t * 3.1 + 0.5)).toFixed(3));
+
+    // mic LED pulses only while talking
+    micLed.setAttribute('opacity', talking(t) ? (0.55 + 0.45 * Math.sin(t * 8)).toFixed(3) : '0.3');
+
+    // subtle ambient colour drift over the whole frame
+    camTint.setAttribute('fill', hsl(h0 + 250, 70, 55));
+    camTint.setAttribute('opacity', (0.045 + 0.02 * Math.sin(t * 0.9)).toFixed(3));
+  };
+
+  window.seek(0);
+})();
+</script>
+</body>
+</html>

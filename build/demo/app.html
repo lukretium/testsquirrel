@@ -1,0 +1,648 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>TestSquirrel demo</title>
+<style>
+  :root{
+    --teal:#0e9e86;
+    --teal-dark:#0a6f5f;
+    --chrome:#1f2a27;
+    --panel:#f6f7f7;
+    --border:#e3e6e5;
+    --text:#1f2a27;
+    --muted:#7a8482;
+    --white:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;width:1920px;height:1080px;overflow:hidden;background:#fff;}
+  body{font-family:"Segoe UI",system-ui,-apple-system,sans-serif;color:var(--text);}
+  .mono{font-family:"Cascadia Code","SF Mono","Consolas",monospace;}
+  #app{position:relative;width:1920px;height:1080px;background:#fff;overflow:hidden;}
+
+  /* ---------- title bar ---------- */
+  #titlebar{position:absolute;left:0;top:0;width:1920px;height:32px;background:var(--chrome);color:#fff;
+    display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:12px;}
+  #titlebar .tb-left{opacity:.95;letter-spacing:.2px;}
+  #titlebar .tb-right{display:flex;gap:18px;align-items:center;opacity:.85;font-size:13px;}
+
+  /* ---------- menu bar ---------- */
+  #menubar{position:absolute;left:0;top:32px;width:1920px;height:30px;background:#fff;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;gap:26px;padding:0 16px;font-size:13px;color:#3a4340;}
+
+  /* ---------- sidebar ---------- */
+  #sidebar{position:absolute;left:0;top:62px;width:300px;height:994px;background:var(--panel);border-right:1px solid var(--border);
+    padding:18px 16px;}
+  #sidebar h2{font-size:15px;margin:0 0 14px 0;font-weight:700;}
+  .sb-search{width:100%;height:34px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--muted);
+    font-size:13px;display:flex;align-items:center;padding:0 10px;margin-bottom:8px;}
+  .sb-filter{width:100%;height:30px;border:1px solid var(--border);border-radius:7px;background:#fff;color:#3a4340;
+    font-size:13px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;margin-bottom:18px;}
+  #sbTree{position:relative;height:840px;}
+  #sbEmpty{position:absolute;top:40px;left:0;width:100%;text-align:center;color:var(--muted);font-size:13px;}
+  #sbItem{position:absolute;top:0;left:0;width:100%;height:52px;background:#fff;border-radius:8px;border:1px solid var(--border);
+    display:flex;align-items:center;padding:0 12px;gap:4px;box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  #sbItem .bar{position:absolute;left:0;top:8px;bottom:8px;width:4px;border-radius:3px;background:var(--teal);}
+  #sbItem .name{margin-left:10px;font-size:14px;font-weight:600;color:var(--text);flex:1;}
+  #sbItem .chip{background:var(--teal);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;}
+
+  /* ---------- main area ---------- */
+  #mainarea{position:absolute;left:300px;top:62px;width:1220px;height:994px;}
+  #centerHeader{position:absolute;left:0;top:0;width:1220px;height:64px;border-bottom:1px solid var(--border);
+    display:flex;align-items:center;padding:0 24px;}
+  .tab-label{font-size:15px;font-weight:600;color:var(--muted);}
+  .tab-label.active{color:var(--teal);}
+  .tab-rule{width:1px;height:16px;background:var(--border);margin:0 18px;}
+  #headerControls{margin-left:auto;display:flex;align-items:center;gap:10px;}
+  .btn{border-radius:8px;font-size:14px;font-weight:600;height:38px;display:flex;align-items:center;justify-content:center;
+    padding:0 18px;cursor:default;border:1px solid transparent;}
+  .btn-primary{background:var(--teal);color:#fff;}
+  .btn-ghost{background:#fff;border:1px solid var(--border);color:var(--muted);}
+  .btn-caret{width:38px;padding:0;background:#fff;border:1px solid var(--border);color:var(--muted);}
+  #progressTrack{position:absolute;left:0;top:64px;width:1220px;height:3px;background:#eef0ef;overflow:hidden;opacity:0;}
+  #progressFill{position:absolute;top:0;height:3px;width:200px;background:var(--teal);border-radius:2px;}
+  #passBadge{position:absolute;left:24px;top:74px;background:var(--teal);color:#fff;font-size:12px;font-weight:700;
+    padding:5px 12px;border-radius:20px;opacity:0;}
+
+  #stepsColumn{position:absolute;left:0;top:68px;width:609px;height:926px;border-right:1px solid var(--border);
+    padding:22px 26px;overflow:hidden;}
+  #stepsEmpty{position:absolute;left:26px;top:260px;width:557px;text-align:center;color:var(--muted);font-size:14px;}
+  .ghost-rule{height:1px;background:#edefee;margin:0 40px 40px 40px;}
+  #stepsList{position:relative;}
+  .step-row{display:flex;align-items:flex-start;gap:12px;padding:14px 4px;border-bottom:1px solid #eef0ef;opacity:0;}
+  .step-row .chip{flex:none;width:26px;height:26px;border-radius:50%;background:var(--teal);color:#fff;font-size:12px;
+    font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+  .step-row .txt{flex:1;font-size:15px;line-height:1.45;color:var(--text);}
+  .step-row .dot{flex:none;width:16px;height:16px;border-radius:50%;border:2px solid #d7dbda;margin-top:3px;}
+  .step-row .dot.done{border:none;background:var(--teal);position:relative;}
+  .step-row .dot.done:after{content:"";position:absolute;left:3px;top:1px;width:5px;height:8px;border:solid #fff;
+    border-width:0 2px 2px 0;transform:rotate(45deg);}
+
+  #codeColumn{position:absolute;left:610px;top:68px;width:610px;height:926px;background:#fbfcfc;padding:22px 26px;
+    overflow:hidden;font-size:14px;line-height:26px;}
+  .code-line{opacity:0;white-space:pre;}
+  .code-line .kw{color:var(--teal);font-weight:700;}
+  .code-line .id{color:#2b3432;}
+  .code-line .str{color:#9a6a2f;}
+  .code-line .pu{color:#8a938f;}
+
+  /* ---------- chat panel ---------- */
+  #chatPanel{position:absolute;left:1520px;top:62px;width:400px;height:994px;background:var(--panel);
+    border-left:1px solid var(--border);display:flex;flex-direction:column;}
+  #chatHead{padding:18px 20px 14px 20px;border-bottom:1px solid var(--border);}
+  #chatHead .row{display:flex;align-items:center;gap:8px;}
+  #chatHead .ttl{font-size:16px;font-weight:700;}
+  #chatHead .sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  #chatLog{flex:1;padding:16px 18px;position:relative;overflow:hidden;}
+  .bubble{max-width:320px;font-size:14px;line-height:1.5;border-radius:12px;padding:12px 14px;margin-bottom:14px;opacity:0;}
+  .bubble.user{background:var(--teal);color:#fff;margin-left:auto;border-bottom-right-radius:3px;}
+  .bubble.assist{background:#fff8e1;color:#3a3220;border-bottom-left-radius:3px;}
+  .bubble.assist .aline{opacity:0;display:block;margin-bottom:2px;}
+  #chatComposerWrap{padding:14px 18px 18px 18px;border-top:1px solid var(--border);}
+  #chatComposerBox{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 12px;min-height:56px;}
+  #chatComposerInput{font-size:14px;line-height:1.4;color:var(--text);min-height:22px;}
+  #chatComposerInput .placeholder{color:#a7aeac;}
+  #chatComposerFoot{display:flex;justify-content:flex-end;margin-top:8px;}
+  #chatSendBtn{background:var(--teal);color:#fff;font-size:13px;font-weight:700;padding:7px 16px;border-radius:8px;}
+
+  .focused{box-shadow:0 0 0 3px rgba(14,158,134,.22);border-color:var(--teal) !important;}
+
+  /* ---------- status bar ---------- */
+  #statusbar{position:absolute;left:0;top:1056px;width:1920px;height:24px;background:#f0f2f1;
+    display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:11px;color:var(--muted);}
+
+  /* ---------- modal ---------- */
+  #modalBackdrop{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(15,20,18,.55);
+    display:flex;align-items:center;justify-content:center;z-index:60;pointer-events:none;}
+  #modal{width:1500px;height:820px;background:#fff;border-radius:16px;box-shadow:0 40px 90px rgba(0,0,0,.38);
+    padding:44px 48px;display:flex;flex-direction:column;gap:22px;}
+  #modal h1{font-size:28px;font-weight:600;margin:0;}
+  .fieldsRow{display:flex;gap:32px;}
+  .field{flex:1;}
+  .field label{display:block;font-size:13px;color:var(--muted);margin-bottom:8px;font-weight:600;}
+  .fake-input{height:46px;border:1px solid var(--border);border-radius:8px;background:#fff;display:flex;align-items:center;
+    padding:0 14px;font-size:15px;color:var(--text);}
+  .fake-select{height:46px;border:1px solid var(--border);border-radius:8px;background:#fff;display:flex;align-items:center;
+    justify-content:space-between;padding:0 14px;font-size:15px;color:var(--text);}
+  .caret-down{color:var(--muted);font-size:11px;}
+  .stepHeaderRow{display:flex;align-items:center;justify-content:space-between;padding:2px 4px;}
+  .stepPill{display:flex;align-items:center;gap:10px;}
+  .stepPill .circ{width:30px;height:30px;border-radius:50%;background:var(--teal);color:#fff;font-size:14px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;}
+  .stepPill.muted .circ{background:#e7eae9;color:var(--muted);}
+  .stepPill .lbl{font-size:15px;font-weight:600;color:var(--text);}
+  .stepPill.muted .lbl{color:var(--muted);}
+  #dropzone{border:2px dashed #d3d8d6;border-radius:12px;height:150px;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;background:#fbfcfc;}
+  #dropzone .dz-txt{color:var(--muted);font-size:15px;}
+  #dropzone .dz-row{display:flex;align-items:center;gap:12px;}
+  .btn-outline{border:1px solid var(--border);background:#fff;border-radius:7px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--text);}
+  #specTextarea{flex:1;border:1px solid var(--border);border-radius:10px;padding:16px 18px;font-size:14.5px;line-height:1.6;
+    color:var(--text);white-space:pre-wrap;overflow:hidden;}
+  #specTextarea .placeholder{color:#a7aeac;}
+  .modalFoot{display:flex;justify-content:flex-end;gap:14px;}
+  .pill-ghost{border:1px solid var(--border);background:#fff;border-radius:24px;padding:12px 24px;font-size:14.5px;font-weight:600;color:var(--text);}
+  .pill-primary{background:var(--teal);color:#fff;border-radius:24px;padding:12px 26px;font-size:14.5px;font-weight:700;}
+
+  .caret{display:inline-block;width:2px;height:1.1em;background:var(--teal);vertical-align:text-bottom;margin-left:1px;}
+
+  /* ---------- browser window ---------- */
+  #browserWindow{position:absolute;top:90px;width:850px;height:900px;background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 30px 70px rgba(0,0,0,.32);z-index:40;}
+  #bwToolbar{height:46px;background:#f4f5f5;border-bottom:1px solid var(--border);display:flex;align-items:center;
+    gap:10px;padding:0 14px;}
+  .bw-dot{width:11px;height:11px;border-radius:50%;background:#dfe3e2;}
+  #bwUrl{flex:1;height:28px;background:#fff;border:1px solid var(--border);border-radius:14px;display:flex;
+    align-items:center;padding:0 14px;font-size:12.5px;color:#4a5350;margin-left:8px;}
+  #bwPage{position:relative;height:854px;background:#fff;overflow:hidden;}
+  #bwForm{position:absolute;left:0;top:0;width:100%;padding:40px 60px;}
+  #bwForm .logo{width:52px;height:52px;margin:0 auto 14px auto;}
+  #bwForm h2{text-align:center;font-size:24px;margin:0 0 6px 0;}
+  #bwForm .sub{text-align:center;color:var(--muted);font-size:14px;margin-bottom:32px;}
+  .bw-field{margin-bottom:20px;}
+  .bw-field label{display:block;font-size:12.5px;font-weight:700;color:#5a635f;margin-bottom:7px;letter-spacing:.2px;
+    text-transform:uppercase;}
+  #bwInquiry{height:42px;border:1px solid var(--border);border-radius:7px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 12px;font-size:14px;background:#fff;}
+  #bwInquiry.filled{color:var(--text);font-weight:600;}
+  #bwInquiry:not(.filled){color:#a7aeac;}
+  #bwMessageBox{min-height:80px;border:1px solid var(--border);border-radius:7px;padding:10px 12px;font-size:14px;
+    color:var(--text);line-height:1.5;}
+  #bwMessageBox .placeholder{color:#a7aeac;}
+  .bw-check-row{display:flex;align-items:center;gap:10px;margin:20px 0 26px 0;}
+  #bwCheckbox{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;position:relative;flex:none;}
+  #bwCheckbox.checked{background:var(--teal);border-color:var(--teal);}
+  #bwCheckbox.checked:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border:solid #fff;
+    border-width:0 2px 2px 0;transform:rotate(45deg);}
+  .bw-check-row .lbl{font-size:13.5px;color:#4a5350;}
+  #bwSendBtn{width:100%;height:46px;border-radius:8px;background:var(--teal);color:#fff;font-size:15px;font-weight:700;
+    display:flex;align-items:center;justify-content:center;}
+  #bwSendBtn.pressed{background:var(--teal-dark);}
+  #bwSuccess{position:absolute;left:0;top:0;width:100%;padding:52px 70px;text-align:center;}
+  #bwSuccess .check{width:70px;height:70px;border-radius:50%;background:var(--teal);color:#fff;font-size:34px;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 20px auto;}
+  #bwSuccess h2{font-size:25px;margin:0 0 10px 0;}
+  #bwSuccess p{color:#5a635f;font-size:14.5px;line-height:1.6;margin:0 0 26px 0;}
+  #bwSuccess .summary{text-align:left;background:#fafbfb;border:1px solid var(--border);border-radius:10px;padding:20px 22px;}
+  #bwSuccess .summary .stitle{font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--muted);margin-bottom:14px;}
+  #bwSuccess dl{display:grid;grid-template-columns:110px 1fr;row-gap:10px;column-gap:10px;margin:0;}
+  #bwSuccess dt{font-size:12.5px;color:var(--muted);font-weight:600;}
+  #bwSuccess dd{font-size:13.5px;color:var(--text);margin:0;}
+
+  /* ---------- end overlay ---------- */
+  #endOverlay{position:absolute;left:0;top:0;width:1920px;height:1080px;background:rgba(246,247,247,.92);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;z-index:80;}
+  #endOverlay h1{font-size:96px;font-weight:800;margin:0;color:var(--text);letter-spacing:-1px;}
+  #endOverlay h1 span{color:var(--teal);}
+  #endOverlay .tag{font-size:34px;color:var(--muted);margin-top:18px;font-weight:400;}
+
+  /* ---------- cursor ---------- */
+  #ripple{position:absolute;border:2px solid var(--teal);border-radius:50%;pointer-events:none;z-index:9998;opacity:0;}
+  #cursorSvg{position:absolute;pointer-events:none;z-index:9999;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="titlebar">
+    <div class="tb-left">TestSquirrel - else42</div>
+    <div class="tb-right"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+  </div>
+
+  <div id="menubar">
+    <span>File</span><span>Debug</span><span>Wizards</span><span>Playwright</span><span>Living documentation</span><span>Benchmark</span>
+  </div>
+
+  <div id="sidebar">
+    <h2>TestSquirrel</h2>
+    <div class="sb-search">Search test cases</div>
+    <div class="sb-filter">by all <span class="caret-down">&#9662;</span></div>
+    <div id="sbTree">
+      <div id="sbEmpty">No test cases yet</div>
+      <div id="sbItem">
+        <div class="bar"></div>
+        <div class="name">Fill out form</div>
+        <div class="chip">Run</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainarea">
+    <div id="centerHeader">
+      <span class="tab-label active">Test steps</span>
+      <div class="tab-rule"></div>
+      <span class="tab-label">Playwright code</span>
+      <div id="headerControls">
+        <div class="btn btn-ghost" id="restartGhostBtn" style="opacity:.45">Restart</div>
+        <div class="btn btn-primary" id="startBtn">Start &#9654;</div>
+        <div class="btn btn-caret">&#9662;</div>
+      </div>
+    </div>
+    <div id="progressTrack"><div id="progressFill"></div></div>
+    <div id="passBadge">5/5 passed</div>
+
+    <div id="stepsColumn">
+      <div id="stepsEmpty">to be done</div>
+      <div class="ghost-rule" style="margin-top:70px"></div>
+      <div class="ghost-rule"></div>
+      <div class="ghost-rule"></div>
+      <div id="stepsList"></div>
+    </div>
+
+    <div id="codeColumn" class="mono">
+      <div class="code-line" id="cl0"><span class="kw">await</span> <span class="id">page</span>.<span class="id">goto</span>(<span class="str">'https://testsquirrel.ai/playground/contact-form-demo.html'</span>);</div>
+      <div class="code-line" id="cl1"><span class="kw">await</span> <span class="id">page</span>.<span class="id">getByTestId</span>(<span class="str">'inquiry-type'</span>).<span class="id">selectOption</span>(<span class="str">'Live demo of TestSquirrel'</span>);</div>
+      <div class="code-line" id="cl2"><span class="kw">await</span> <span class="id">page</span>.<span class="id">getByTestId</span>(<span class="str">'message'</span>).<span class="id">fill</span>(<span class="str">'I am interested in a live demo of TestSquirrel'</span>);</div>
+      <div class="code-line" id="cl3"><span class="kw">await</span> <span class="id">page</span>.<span class="id">getByTestId</span>(<span class="str">'consent'</span>).<span class="id">check</span>();</div>
+      <div class="code-line" id="cl4"><span class="kw">await</span> <span class="id">page</span>.<span class="id">getByTestId</span>(<span class="str">'send'</span>).<span class="id">click</span>();</div>
+      <div class="code-line" id="cl5"><span class="kw">await</span> <span class="kw">expect</span>(<span class="id">page</span>.<span class="id">getByTestId</span>(<span class="str">'confirmation'</span>)).<span class="id">toBeVisible</span>();</div>
+    </div>
+  </div>
+
+  <div id="chatPanel">
+    <div id="chatHead">
+      <div class="row">
+        <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="10" fill="#0e9e86"/><path d="M11 5 L12.3 9.2 L16.5 10.5 L12.3 11.8 L11 16 L9.7 11.8 L5.5 10.5 L9.7 9.2 Z" fill="#fff"/></svg>
+        <span class="ttl">TestSquirrel Chat</span>
+      </div>
+      <div class="sub">AI-assisted test automation</div>
+    </div>
+    <div id="chatLog">
+      <div id="userBubble" class="bubble user"></div>
+      <div id="assistBubble" class="bubble assist">
+        <span class="aline" id="al0"></span>
+        <span class="aline" id="al1"></span>
+        <span class="aline" id="al2"></span>
+        <span class="aline" id="al3"></span>
+        <span class="aline" id="al4"></span>
+      </div>
+    </div>
+    <div id="chatComposerWrap">
+      <div id="chatComposerBox">
+        <div id="chatComposerInput"></div>
+        <div id="chatComposerFoot">
+          <div id="chatSendBtn">Send</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusbar">
+    <span id="statusMsg">Draft a new test specification&#8230;</span>
+    <span>Version 1.4.2</span>
+  </div>
+
+  <!-- ================= modal ================= -->
+  <div id="modalBackdrop">
+    <div id="modal">
+      <h1>Create test case</h1>
+      <div class="fieldsRow">
+        <div class="field">
+          <label>Test Case Name</label>
+          <div class="fake-input" id="nameInput"></div>
+        </div>
+        <div class="field">
+          <label>Select a decision type</label>
+          <div class="fake-select"><span>Test Specification</span><span class="caret-down">&#9662;</span></div>
+        </div>
+        <div class="field">
+          <label>Is this test case critical?</label>
+          <div class="fake-select"><span>Critical</span><span class="caret-down">&#9662;</span></div>
+        </div>
+      </div>
+      <div class="stepHeaderRow">
+        <div class="stepPill"><div class="circ">1</div><div class="lbl">Upload</div></div>
+        <div class="stepPill muted"><div class="circ">2</div><div class="lbl">Test Refinement</div></div>
+      </div>
+      <div id="dropzone">
+        <div class="dz-txt">Drop your test specification here</div>
+        <div class="dz-row">
+          <div class="btn-outline">Choose file</div>
+          <span class="dz-txt" style="font-size:13px;">(none uploaded)</span>
+        </div>
+      </div>
+      <div id="specTextarea" class="mono"></div>
+      <div class="modalFoot">
+        <div class="pill-ghost" id="aiRefineBtn">AI refine &#10024;</div>
+        <div class="pill-primary" id="useExactlyBtn">Use exactly</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= browser window ================= -->
+  <div id="browserWindow">
+    <div id="bwToolbar">
+      <div class="bw-dot"></div><div class="bw-dot"></div><div class="bw-dot"></div>
+      <div id="bwUrl">testsquirrel.ai/playground/contact-form-demo.html</div>
+    </div>
+    <div id="bwPage">
+      <div id="bwForm">
+        <svg class="logo" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24" fill="#0e9e86"/>
+          <path d="M18 32c0-8 6-15 12-15 3 0 4 2 4 4 0 4-4 5-4 9 0 4 3 5 3 8 0 2-2 3-4 3-6 0-11-4-11-9z" fill="#fff" opacity=".92"/></svg>
+        <h2>TestSquirrel</h2>
+        <div class="sub">AI-assisted test automation</div>
+        <div class="bw-field">
+          <label>Inquiry type</label>
+          <div id="bwInquiry"><span id="bwInquiryTxt">Select an option</span><span class="caret-down">&#9662;</span></div>
+        </div>
+        <div class="bw-field">
+          <label>What would you like to achieve with TestSquirrel?</label>
+          <div id="bwMessageBox"><span id="bwMessageTxt"></span></div>
+        </div>
+        <div class="bw-check-row">
+          <div id="bwCheckbox"></div>
+          <div class="lbl">I agree to the Privacy Policy</div>
+        </div>
+        <div id="bwSendBtn">Send message</div>
+      </div>
+      <div id="bwSuccess" style="opacity:0;">
+        <div class="check">&#10003;</div>
+        <h2>Request approved</h2>
+        <p>Thanks, Alice &#8212; we've received your request and a member of our team<br>will reach out shortly to schedule your live demo.</p>
+        <div class="summary">
+          <div class="stitle">SUBMISSION SUMMARY</div>
+          <dl>
+            <dt>Name</dt><dd>Alice Smith</dd>
+            <dt>Email</dt><dd>alice.smith@example.com</dd>
+            <dt>Company</dt><dd>Northwind Retail</dd>
+            <dt>Topic</dt><dd>Live demo of TestSquirrel</dd>
+            <dt>Details</dt><dd>I am interested in a live demo of TestSquirrel</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= end overlay ================= -->
+  <div id="endOverlay">
+    <h1>Test<span>Squirrel</span></h1>
+    <div class="tag">Don't chat with your code. Specify it.</div>
+  </div>
+
+  <!-- ================= cursor ================= -->
+  <div id="ripple"></div>
+  <svg id="cursorSvg" width="26" height="30" viewBox="0 0 16 20">
+    <path d="M0 0 L0 15.5 L3.7 12 L6.2 18 L8.7 17 L6.2 11 L11 11 Z" fill="#ffffff" stroke="#1f2a27" stroke-width="1.1" stroke-linejoin="round"/>
+  </svg>
+
+</div>
+
+<script>
+window.DURATION = 42;
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function lerp(a,b,p){return a+(b-a)*p;}
+function easeInOutCubic(x){x=clamp(x,0,1);return x<0.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;}
+function easeOutCubic(x){x=clamp(x,0,1);return 1-Math.pow(1-x,3);}
+function windowP(t,a,b){return clamp((t-a)/(b-a),0,1);}
+function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+var els = {};
+function $(id){ if(!els[id]) els[id]=document.getElementById(id); return els[id]; }
+
+/* ---- typing helper: returns {visible, done} and writes caret-aware HTML into el ---- */
+function typeInto(el, text, tStart, tEnd, t, caretActive, placeholder){
+  var p = windowP(t, tStart, tEnd);
+  var len = Math.floor(p * text.length);
+  var visible = text.slice(0, len);
+  var caretOn = caretActive && (Math.floor(t*2)%2===0);
+  if(visible.length===0 && !caretOn && placeholder!==undefined){
+    el.innerHTML = '<span class="placeholder">'+placeholder+'</span>';
+    return;
+  }
+  var html = escapeHtml(visible).replace(/\n/g,'<br>');
+  if(caretOn) html += '<span class="caret"></span>';
+  el.innerHTML = html;
+}
+
+var stepsCore = [
+  'Select "Live demo of TestSquirrel" from the Inquiry type dropdown',
+  'Enter "I am interested in a live demo of TestSquirrel" in the "What would you like to achieve with TestSquirrel?" field',
+  'Check the "I agree to the Privacy Policy" checkbox',
+  'Click the "Send message" button',
+  'Verify that the request approved message is displayed'
+];
+
+var specText = "#Fill out the contact form\nGo to the TestSquirrel contact form demo page.\nEnter the visitor details and a short message.\nAccept the privacy consent checkbox.\nSend the form and verify the confirmation appears.";
+var nameText = "Fill out form";
+var composerText = "Go to https://testsquirrel.ai/playground/contact-form-demo.html and fill out the contact form";
+
+/* chat line windows: 19.6 -> 24.0, 5 lines */
+var LINE_T0 = 19.6, LINE_DUR = 0.88, LINE_TYPE = 0.72;
+function lineStart(i){ return LINE_T0 + i*LINE_DUR; }
+function lineEnd(i){ return lineStart(i) + LINE_TYPE; }
+
+/* phase3 step check times */
+var STEP_CHECK = [26.5, 28.1, 29.7, 31.3, 32.9];
+var CODE_T = [25.6, 26.5, 28.1, 29.7, 31.3, 32.9];
+
+/* ---- cursor stop schedule ---- */
+var IDLE_POS = {x:960, y:1000};
+var REST_POS = {x:1700, y:1000};
+var WATCH_POS = {x:640, y:760};
+function stopPos(name){
+  if(name==='idle') return IDLE_POS;
+  if(name==='rest') return REST_POS;
+  if(name==='watch') return WATCH_POS;
+  var r = document.getElementById(name).getBoundingClientRect();
+  return {x:r.left+r.width/2, y:r.top+r.height/2};
+}
+var STOPS = [
+  {t:0.0,  el:'idle'},
+  {t:1.5,  el:'idle'},
+  {t:2.2,  el:'nameInput'},
+  {t:4.8,  el:'nameInput'},
+  {t:5.6,  el:'specTextarea'},
+  {t:11.2, el:'specTextarea'},
+  {t:12.0, el:'useExactlyBtn'},
+  {t:13.0, el:'useExactlyBtn'},
+  {t:13.8, el:'chatComposerInput'},
+  {t:18.8, el:'chatComposerInput'},
+  {t:19.4, el:'chatSendBtn'},
+  {t:24.5, el:'chatSendBtn'},
+  {t:25.2, el:'startBtn'},
+  {t:25.8, el:'startBtn'},
+  {t:26.6, el:'watch'},
+  {t:35.6, el:'watch'},
+  {t:37.3, el:'rest'},
+  {t:42.0, el:'rest'}
+];
+var CLICK_TIMES = [2.2, 5.6, 12.0, 13.8, 19.4, 25.2];
+
+function getCursorPos(t){
+  t = clamp(t, 0, 42);
+  var i=0;
+  while(i < STOPS.length-1 && t > STOPS[i+1].t) i++;
+  var a = STOPS[i], b = STOPS[Math.min(i+1, STOPS.length-1)];
+  var pa = stopPos(a.el), pb = stopPos(b.el);
+  var p = (b.t>a.t) ? easeInOutCubic((t-a.t)/(b.t-a.t)) : 1;
+  return { x: lerp(pa.x, pb.x, p), y: lerp(pa.y, pb.y, p) };
+}
+
+window.seek = function(t){
+  t = clamp(Number(t)||0, 0, 42);
+
+  /* ================= PHASE 1 : modal ================= */
+  var modalOpacity, modalScale;
+  if(t < 1.2){
+    var p = easeInOutCubic(t/1.2);
+    modalOpacity = p; modalScale = lerp(0.94,1,p);
+  } else if(t < 12.0){
+    modalOpacity = 1; modalScale = 1;
+  } else if(t < 12.5){
+    var p2 = easeInOutCubic((t-12.0)/0.5);
+    modalOpacity = 1-p2; modalScale = lerp(1,0.96,p2);
+  } else {
+    modalOpacity = 0; modalScale = 0.96;
+  }
+  $('modalBackdrop').style.background = 'rgba(15,20,18,'+(modalOpacity*0.55).toFixed(3)+')';
+  $('modal').style.opacity = modalOpacity.toFixed(3);
+  $('modal').style.transform = 'scale('+modalScale.toFixed(4)+')';
+
+  var nameFocused = (t>=2.2 && t<5.6);
+  var specFocused = (t>=5.6 && t<12.0);
+  $('nameInput').classList.toggle('focused', nameFocused);
+  $('specTextarea').classList.toggle('focused', specFocused);
+
+  typeInto($('nameInput'), nameText, 2.2, 4.5, t, nameFocused, '');
+  typeInto($('specTextarea'), specText, 5.6, 11.0, t, specFocused, '#Interface your test specification here ...');
+
+  /* ================= PHASE 2 : chat + steps ================= */
+  var composerFocused = (t>=13.8 && t<19.4);
+  $('chatComposerInput').parentElement.classList.toggle('focused', composerFocused);
+  if(t < 19.4){
+    typeInto($('chatComposerInput'), composerText, 13.8, 18.5, t, composerFocused, 'Ask TestSquirrel to build or run a test&#8230;');
+  } else {
+    $('chatComposerInput').innerHTML = '<span class="placeholder">Ask TestSquirrel to build or run a test&#8230;</span>';
+  }
+
+  var userBubbleOn = t >= 19.45;
+  $('userBubble').style.opacity = userBubbleOn ? 1 : 0;
+  $('userBubble').textContent = composerText;
+
+  var assistOn = t >= 19.6;
+  $('assistBubble').style.opacity = assistOn ? 1 : 0;
+  for(var i=0;i<5;i++){
+    var lineEl = $('al'+i);
+    var ls = lineStart(i), le = lineEnd(i);
+    if(t < ls){ lineEl.style.opacity = 0; lineEl.innerHTML=''; continue; }
+    lineEl.style.opacity = 1;
+    var caretActive = (t < le + 0.15) && (t < 24.3);
+    typeInto(lineEl, (i+1)+'. '+stepsCore[i], ls, le, t, caretActive, '');
+  }
+
+  var firstStepLanded = t >= lineStart(0);
+  $('stepsEmpty').style.opacity = firstStepLanded ? 0 : 1;
+
+  var stepsListHtml = '';
+  for(var i=0;i<5;i++){
+    var appearT = lineStart(i);
+    if(t < appearT) continue;
+    var checked = t >= STEP_CHECK[i];
+    stepsListHtml += '<div class="step-row" style="opacity:1"><div class="chip">'+(i+1)+'</div>'+
+      '<div class="txt">'+stepsCore[i]+'</div>'+
+      '<div class="dot'+(checked?' done':'')+'"></div></div>';
+  }
+  $('stepsList').innerHTML = stepsListHtml;
+
+  /* sidebar tree */
+  var treeShown = t >= 15;
+  $('sbEmpty').style.opacity = treeShown ? 0 : 1;
+  $('sbItem').style.opacity = treeShown ? 1 : 0;
+
+  /* ================= PHASE 3 : run ================= */
+  var runClicked = t >= 25.2;
+  var running = t >= 25.2 && t < 36;
+  var doneRun = t >= 36;
+  $('startBtn').textContent = doneRun ? 'Restart' : (running ? 'Running…' : 'Start ▶');
+  $('startBtn').style.opacity = 1;
+
+  $('progressTrack').style.opacity = running ? 1 : 0;
+  if(running){
+    var cyc = 1220-200;
+    var raw = (t*420) % (2*cyc);
+    var pos = raw>cyc ? (2*cyc-raw) : raw;
+    $('progressFill').style.left = pos.toFixed(1)+'px';
+  }
+  $('passBadge').style.opacity = doneRun ? 1 : 0;
+
+  /* browser window slide-in */
+  var bwStart = 25.5, bwSettle = 26.3;
+  var bwP = easeInOutCubic(windowP(t, bwStart, bwSettle));
+  var bwLeft = lerp(1920, 1030, t<bwStart?0:bwP);
+  $('browserWindow').style.left = bwLeft.toFixed(1)+'px';
+  $('browserWindow').style.opacity = (t<bwStart) ? 0 : 1;
+
+  /* code lines */
+  for(var i=0;i<6;i++){
+    $('cl'+i).style.opacity = (t >= CODE_T[i]) ? 1 : 0;
+  }
+
+  /* form field fill inside browser */
+  var s0 = t >= STEP_CHECK[0];
+  $('bwInquiryTxt').textContent = s0 ? 'Live demo of TestSquirrel' : 'Select an option';
+  $('bwInquiry').classList.toggle('filled', s0);
+
+  var msgWin0 = STEP_CHECK[1], msgWin1 = STEP_CHECK[1]+1.3;
+  var fullMsg = 'I am interested in a live demo of TestSquirrel';
+  if(t < msgWin0){
+    $('bwMessageTxt').innerHTML = '<span class="placeholder">How can we help?</span>';
+  } else {
+    var mp = windowP(t, msgWin0, msgWin1);
+    var mlen = Math.floor(mp*fullMsg.length);
+    $('bwMessageTxt').textContent = fullMsg.slice(0, mlen);
+  }
+
+  var s2 = t >= STEP_CHECK[2];
+  $('bwCheckbox').classList.toggle('checked', s2);
+
+  var s3 = t >= STEP_CHECK[3];
+  $('bwSendBtn').classList.toggle('pressed', s3 && t < 33.5);
+
+  /* success swap */
+  var swapP = windowP(t, 33.5, 33.8);
+  $('bwForm').style.opacity = (1-swapP).toFixed(3);
+  $('bwSuccess').style.opacity = swapP.toFixed(3);
+
+  /* ================= status bar ================= */
+  var msg;
+  if(t < 12.5) msg = 'Draft a new test specification…';
+  else if(t < 19.6) msg = 'Describe the scenario to generate steps…';
+  else if(t < 24.5) msg = 'Steps generated · ready to run';
+  else if(t < 25.2) msg = 'Preparing test run…';
+  else if(t < 33.5) msg = 'Running specification: Fill out form';
+  else if(t < 36) msg = 'Finalizing results…';
+  else msg = 'Specification passed · 5 of 5 steps · 8.4s';
+  $('statusMsg').textContent = msg;
+
+  /* ================= PHASE 4 : end card ================= */
+  var endP = easeInOutCubic(windowP(t, 38.5, 40.0));
+  $('endOverlay').style.opacity = endP.toFixed(3);
+
+  /* ================= cursor ================= */
+  var pos = getCursorPos(t);
+  $('cursorSvg').style.left = pos.x.toFixed(1)+'px';
+  $('cursorSvg').style.top  = pos.y.toFixed(1)+'px';
+
+  var rippleOn = false, rippleP = 0;
+  for(var k=0;k<CLICK_TIMES.length;k++){
+    var ct = CLICK_TIMES[k];
+    if(t >= ct && t <= ct+0.25){ rippleOn = true; rippleP = (t-ct)/0.25; break; }
+  }
+  var ripple = $('ripple');
+  if(rippleOn){
+    var rad = lerp(4, 26, rippleP);
+    ripple.style.opacity = (1-rippleP).toFixed(3);
+    ripple.style.width = (rad*2).toFixed(1)+'px';
+    ripple.style.height = (rad*2).toFixed(1)+'px';
+    ripple.style.left = (pos.x+3-rad).toFixed(1)+'px';
+    ripple.style.top = (pos.y+8-rad).toFixed(1)+'px';
+  } else {
+    ripple.style.opacity = 0;
+  }
+};
+
+window.seek(0);
+</script>
+</body>
+</html>

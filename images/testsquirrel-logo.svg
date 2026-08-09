@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1355 1160" width="1355" height="1160" role="img" aria-label="TestSquirrel logo: a squirrel above lines of code">
+  <defs>
+    <!-- warm cream -> tan -> caramel sweep, running across the whole mark -->
+    <linearGradient id="tailG" x1=".78" y1=".08" x2=".18" y2=".92" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="30%" stop-color="#f0d29c"/>
+      <stop offset="64%" stop-color="#d69a4a"/>
+      <stop offset="100%" stop-color="#a2661f"/>
+    </linearGradient>
+    <linearGradient id="bodyG" x1=".2" y1="0" x2=".85" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fdf1d8"/>
+      <stop offset="45%" stop-color="#e8c188"/>
+      <stop offset="100%" stop-color="#b0722a"/>
+    </linearGradient>
+    <linearGradient id="headG" x1=".15" y1="0" x2=".9" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#fffdf7"/>
+      <stop offset="52%" stop-color="#efd0a0"/>
+      <stop offset="100%" stop-color="#c0842f"/>
+    </linearGradient>
+    <linearGradient id="earG" x1="0" y1="1" x2=".6" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#d9a35c"/>
+      <stop offset="100%" stop-color="#a3671f"/>
+    </linearGradient>
+    <linearGradient id="pawG" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#f6e3bd"/>
+      <stop offset="100%" stop-color="#c68c39"/>
+    </linearGradient>
+  </defs>
+
+  <!--
+    Sticker construction: the same shapes are drawn twice. First as one dark
+    silhouette with a fat round stroke (which fuses every part into a single
+    contour), then again unstroked with their gradients on top. That gives the
+    uniform heavy outline the mark needs to survive at 42px.
+  -->
+  <g id="squirrel">
+
+    <!-- ============ 1. fused dark silhouette ============ -->
+    <g fill="#15201c" stroke="#15201c" stroke-width="46" stroke-linejoin="round" stroke-linecap="round">
+      <!-- tail: big S-curve sweeping up behind the back and over the head -->
+      <path d="M636 838C404 828 246 682 238 496 230 306 402 150 646 146c130-2 224 48 268 108-42 46-112 64-212 66-186 4-310 96-316 220-6 130 84 232 232 254z"/>
+      <!-- haunch / body -->
+      <path d="M700 546c126 0 214 90 214 216 0 130-92 222-224 222S472 892 472 762c0-126 100-216 228-216z"/>
+      <!-- hind foot -->
+      <path d="M556 902c-58 8-96 40-92 72 4 30 44 44 100 36 46-6 78-28 78-56 0-30-32-56-86-52z"/>
+      <!-- ear with the red-squirrel tuft -->
+      <path d="M930 428c-12-78-14-134-4-170 8-30 28-24 38 6 14 44 38 106 60 156z"/>
+      <path d="M926 262c-6-46-2-84 12-114 10 30 14 70 12 112z"/>
+      <!-- head -->
+      <path d="M932 402c94 0 168 62 168 152 0 44-18 82-48 108 34 10 60 22 74 34 14 12 8 28-16 34-40 10-92 6-140-8-24 12-52 18-82 18-92 0-160-72-160-176 0-96 74-162 204-162z"/>
+      <!-- forepaws tucked at the chest -->
+      <path d="M842 690c34 0 58 22 58 52s-24 52-58 52-58-22-58-52 24-52 58-52z"/>
+      <path d="M818 792c30 0 52 20 52 46s-22 46-52 46-52-20-52-46 22-46 52-46z"/>
+    </g>
+
+    <!-- ============ 2. gradient fills, inset by the stroke ============ -->
+    <g>
+      <path d="M636 838C404 828 246 682 238 496 230 306 402 150 646 146c130-2 224 48 268 108-42 46-112 64-212 66-186 4-310 96-316 220-6 130 84 232 232 254z" fill="url(#tailG)"/>
+      <!-- white sweep along the top of the tail -->
+      <path d="M392 268c76-72 178-104 300-98-118 22-204 66-262 132-58 66-84 146-78 240-40-96-30-206 40-274z" fill="#fff8e8" opacity=".4"/>
+      <path d="M700 546c126 0 214 90 214 216 0 130-92 222-224 222S472 892 472 762c0-126 100-216 228-216z" fill="url(#bodyG)"/>
+      <!-- belly highlight -->
+      <path d="M646 590c-70 26-112 88-112 168 0 46 14 86 40 116-58-30-92-88-92-160 0-84 62-140 164-124z" fill="#fffaee" opacity=".55"/>
+      <path d="M556 902c-58 8-96 40-92 72 4 30 44 44 100 36 46-6 78-28 78-56 0-30-32-56-86-52z" fill="url(#pawG)"/>
+      <path d="M930 428c-12-78-14-134-4-170 8-30 28-24 38 6 14 44 38 106 60 156z" fill="url(#earG)"/>
+      <path d="M926 262c-6-46-2-84 12-114 10 30 14 70 12 112z" fill="#8f5514"/>
+      <path d="M932 402c94 0 168 62 168 152 0 44-18 82-48 108 34 10 60 22 74 34 14 12 8 28-16 34-40 10-92 6-140-8-24 12-52 18-82 18-92 0-160-72-160-176 0-96 74-162 204-162z" fill="url(#headG)"/>
+      <path d="M842 690c34 0 58 22 58 52s-24 52-58 52-58-22-58-52 24-52 58-52z" fill="url(#pawG)"/>
+      <path d="M818 792c30 0 52 20 52 46s-22 46-52 46-52-20-52-46 22-46 52-46z" fill="url(#pawG)"/>
+    </g>
+
+    <!-- ============ 3. face details ============ -->
+    <g>
+      <!-- eye -->
+      <circle cx="982" cy="516" r="42" fill="#15201c"/>
+      <circle cx="996" cy="500" r="14" fill="#fff"/>
+      <!-- nose -->
+      <circle cx="1116" cy="576" r="22" fill="#15201c"/>
+      <!-- cheek / muzzle seam -->
+      <path d="M1046 606c22 10 46 14 70 12" fill="none" stroke="#15201c" stroke-width="13" stroke-linecap="round" opacity=".7"/>
+    </g>
+  </g>
+
+  <!-- ============ 4. lines of code ============ -->
+  <g id="codelines">
+    <rect x="70"  y="998"  width="176" height="34" rx="17" fill="#1d2b26"/>
+    <rect x="266" y="998"  width="112" height="34" rx="17" fill="#0e9e86"/>
+    <rect x="398" y="998"  width="72"  height="34" rx="17" fill="#1d2b26"/>
+    <rect x="130" y="1054" width="104" height="34" rx="17" fill="#0e9e86"/>
+    <rect x="254" y="1054" width="188" height="34" rx="17" fill="#1d2b26"/>
+    <rect x="462" y="1054" width="88"  height="34" rx="17" fill="#1d2b26"/>
+    <rect x="70"  y="1110" width="88"  height="34" rx="17" fill="#1d2b26"/>
+    <rect x="178" y="1110" width="140" height="34" rx="17" fill="#0a6f5f"/>
+    <rect x="338" y="1110" width="96"  height="34" rx="17" fill="#1d2b26"/>
+    <rect x="454" y="1110" width="164" height="34" rx="17" fill="#1d2b26" opacity=".45"/>
+  </g>
+</svg>
