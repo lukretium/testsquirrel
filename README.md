@@ -15,6 +15,7 @@ videos/
 build/
   gen-hero.js                       regenerates the hero portrait SVG
   render-demo.js                    renders + encodes the demo video
+  gen-audio.py                      synthesises the soundtrack and muxes it in
   demo/app.html                     fake TestSquirrel desktop app, seekable animation
   demo/pip.html                     mascot "webcam" overlay, seekable animation
   demo/stage.html                   composites app + webcam into one 1920x1080 frame
@@ -63,3 +64,22 @@ screenshots, so the result is deterministic and never drops frames.
 
 Consequently neither demo page may use CSS transitions/animations or timers — all motion must be
 computed inside `seek(t)`, or it will desync from the frame stepping.
+
+### Soundtrack
+
+```sh
+python3 build/gen-audio.py             # -> soundtrack, muxed into the mp4
+python3 build/gen-audio.py --wav-only  # just render the wav
+```
+
+Requires `numpy`. The track is synthesised from oscillators and shaped noise — an ambient pad
+over an Am–F–C–G progression, a sparse bell arpeggio, plus interaction sounds (keystrokes,
+clicks, whooshes, step ticks, success chimes). Nothing is sampled from a third-party source, so
+there is no licensing question.
+
+The event times at the top of `gen-audio.py` mirror the constants in `demo/app.html`
+(`CLICK_TIMES`, `STEP_CHECK`, the typing windows). **If you retime the animation, update them or
+the sounds will drift out of sync** — they are duplicated, not derived.
+
+Final loudness is set by `loudnorm=I=-18` at mux time; the Python side deliberately leaves
+6 dB of headroom.
